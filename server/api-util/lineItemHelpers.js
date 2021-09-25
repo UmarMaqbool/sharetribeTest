@@ -105,6 +105,24 @@ exports.calculateQuantityFromDates = (startDate, endDate, type) => {
 };
 
 /**
+ * Resolve the cleaning fee.
+ *
+ * @param {Object} listing
+ * @return {Money} cleaningfee
+ */
+exports.resolveCleaningFeePrice = listing => {
+  const publicData = listing.attributes.publicData;
+  const cleaningFee = publicData && publicData.cleaningFee;
+  const { amount, currency } = cleaningFee;
+
+  if (amount && currency) {
+    return new Money(amount, currency);
+  }
+
+  return null;
+};
+
+/**
  *
  *  `lineTotal` is calculated by the following rules:
  * - If `quantity` is provided, the line total will be `unitPrice * quantity`.

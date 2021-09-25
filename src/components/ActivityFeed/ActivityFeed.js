@@ -143,6 +143,8 @@ const resolveTransitionMessage = (
       ) : (
         <FormattedMessage id="ActivityFeed.transitionExpire" values={{ displayName }} />
       );
+    case TRANSITION_DECLINE_BY_OPERATOR:
+      return <FormattedMessage id="ActivityFeed.operatorDecline" />;
     case TRANSITION_CANCEL:
       return <FormattedMessage id="ActivityFeed.transitionCancel" />;
     case TRANSITION_COMPLETE:

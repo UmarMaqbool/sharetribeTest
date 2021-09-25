@@ -20,6 +20,9 @@
   flex-shrink: 0;
   width: 100%;
 }
+.cleaningFeeInput {
+  padding-top: 24px;
+}
 
 .submitButton {
   margin-top: auto;
