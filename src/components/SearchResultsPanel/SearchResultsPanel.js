@@ -2,11 +2,23 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { propTypes } from '../../util/types';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
 import { ListingCard, PaginationLinks } from '../../components';
+import { AddWishlistToCurrentuser } from '../../containers/MangeWishlistPage/ManageWishlistPage.duck';
 import css from './SearchResultsPanel.module.css';
 
 const SearchResultsPanel = props => {
-  const { className, rootClassName, listings, pagination, search, setActiveListing } = props;
+  const {
+    className,
+    rootClassName,
+    listings,
+    pagination,
+    search,
+    setActiveListing,
+    currentUser,
+    onSubmitAddWishlist,
+  } = props;
   const classes = classNames(rootClassName || css.root, className);
 
   const paginationLinks =
@@ -39,6 +51,11 @@ const SearchResultsPanel = props => {
             listing={l}
             renderSizes={cardRenderSizes}
             setActiveListing={setActiveListing}
+            onSelectAddToWishlist={values => {
+              console.log('here2: ', values);
+              onSubmitAddWishlist(values);
+            }}
+            user={currentUser}
           />
         ))}
         {props.children}
@@ -68,4 +85,22 @@ SearchResultsPanel.propTypes = {
   search: object,
 };
 
-export default SearchResultsPanel;
+const mapStateToProps = state => {
+  const { currentUser } = state.user;
+  //const {} = state.ManageWishlistPage;
+  return {
+    currentUser,
+  };
+};
+
+const mapDispatchToProps = dispatch => ({
+  onSubmitAddWishlist: values => dispatch(AddWishlistToCurrentuser(values)),
+});
+
+const SearchResults = compose(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )
+)(SearchResultsPanel);
+export default SearchResults;

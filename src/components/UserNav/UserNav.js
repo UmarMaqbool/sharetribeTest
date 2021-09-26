@@ -20,6 +20,13 @@ const UserNav = props => {
       },
     },
     {
+      text: <FormattedMessage id="ManageWhislistPage.yourWishlist" />,
+      selected: selectedPageName === 'ManageWishlistPage',
+      linkProps: {
+        name: 'ManageWishlistPage',
+      },
+    },
+    {
       text: <FormattedMessage id="ManageListingsPage.profileSettings" />,
       selected: selectedPageName === 'ProfileSettingsPage',
       disabled: false,

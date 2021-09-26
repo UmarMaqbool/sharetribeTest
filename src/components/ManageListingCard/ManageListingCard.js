@@ -124,6 +124,7 @@ export const ManageListingCardComponent = props => {
     onToggleMenu,
     renderSizes,
     availabilityEnabled,
+    isWishlist,
   } = props;
   const classes = classNames(rootClassName || css.root, className);
   const currentListing = ensureOwnListing(listing);
@@ -338,29 +339,31 @@ export const ManageListingCardComponent = props => {
           </div>
         </div>
 
-        <div className={css.manageLinks}>
-          <NamedLink
-            className={css.manageLink}
-            name="EditListingPage"
-            params={{ id, slug, type: editListingLinkType, tab: 'description' }}
-          >
-            <FormattedMessage id="ManageListingCard.editListing" />
-          </NamedLink>
+        {!isWishlist && (
+          <div className={css.manageLinks}>
+            <NamedLink
+              className={css.manageLink}
+              name="EditListingPage"
+              params={{ id, slug, type: editListingLinkType, tab: 'description' }}
+            >
+              <FormattedMessage id="ManageListingCard.editListing" />
+            </NamedLink>
 
-          {availabilityEnabled ? (
-            <React.Fragment>
-              <span className={css.manageLinksSeparator}>{' • '}</span>
+            {availabilityEnabled ? (
+              <React.Fragment>
+                <span className={css.manageLinksSeparator}>{' • '}</span>
 
-              <NamedLink
-                className={css.manageLink}
-                name="EditListingPage"
-                params={{ id, slug, type: editListingLinkType, tab: 'availability' }}
-              >
-                <FormattedMessage id="ManageListingCard.manageAvailability" />
-              </NamedLink>
-            </React.Fragment>
-          ) : null}
-        </div>
+                <NamedLink
+                  className={css.manageLink}
+                  name="EditListingPage"
+                  params={{ id, slug, type: editListingLinkType, tab: 'availability' }}
+                >
+                  <FormattedMessage id="ManageListingCard.manageAvailability" />
+                </NamedLink>
+              </React.Fragment>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
   );

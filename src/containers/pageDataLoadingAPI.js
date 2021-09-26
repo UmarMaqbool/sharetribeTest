@@ -12,6 +12,7 @@ import { loadData as PaymentMethodsPageLoader } from './PaymentMethodsPage/Payme
 import { loadData as ProfilePageLoader } from './ProfilePage/ProfilePage.duck';
 import { loadData as SearchPageLoader } from './SearchPage/SearchPage.duck';
 import { loadData as StripePayoutPageLoader } from './StripePayoutPage/StripePayoutPage.duck';
+import { loadData as ManageWishlistPageLoader } from './MangeWishlistPage/ManageWishlistPage.duck';
 import {
   loadData as TransactionPageLoader,
   setInitialValues as TransactionPageInitialValues,
@@ -39,6 +40,9 @@ const getPageDataLoadingAPI = () => {
     },
     ManageListingsPage: {
       loadData: ManageListingsPageLoader,
+    },
+    ManageWishlistPage: {
+      loadData: ManageWishlistPageLoader,
     },
     PaymentMethodsPage: {
       loadData: PaymentMethodsPageLoader,

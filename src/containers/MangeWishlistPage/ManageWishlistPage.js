@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { FormattedMessage, injectIntl, intlShape } from '../../util/reactIntl';
+import { getListingsById } from '../../ducks/marketplaceData.duck';
 import { propTypes } from '../../util/types';
 import { isScrollingDisabled } from '../../ducks/UI.duck';
 import {
@@ -16,12 +17,12 @@ import {
   LayoutWrapperFooter,
   Footer,
 } from '../../components';
-import { TopbarContainer } from '../../containers';
+import { TopbarContainer } from '..';
 
-import { closeListing, openListing, getOwnListingsById } from './ManageListingsPage.duck';
-import css from './ManageListingsPage.module.css';
+import { closeListing, openListing } from './ManageWishlistPage.duck';
+import css from './ManageWishlistPage.module.css';
 
-export class ManageListingsPageComponent extends Component {
+export class ManageWishlistPageComponent extends Component {
   constructor(props) {
     super(props);
 
@@ -55,7 +56,7 @@ export class ManageListingsPageComponent extends Component {
 
     const loadingResults = (
       <h2>
-        <FormattedMessage id="ManageListingsPage.loadingOwnListings" />
+        <FormattedMessage id="ManageWishList.loading" />
       </h2>
     );
 
@@ -76,7 +77,7 @@ export class ManageListingsPageComponent extends Component {
       listingsAreLoaded && pagination.totalItems > 0 ? (
         <h1 className={css.title}>
           <FormattedMessage
-            id="ManageListingsPage.youHaveListings"
+            id="ManageWishList.youHaveListings"
             values={{ count: pagination.totalItems }}
           />
         </h1>
@@ -89,7 +90,7 @@ export class ManageListingsPageComponent extends Component {
       listingsAreLoaded && pagination && pagination.totalPages > 1 ? (
         <PaginationLinks
           className={css.pagination}
-          pageName="ManageListingsPage"
+          pageName="ManageWishlistPage"
           pageSearchParams={{ page }}
           pagination={pagination}
         />
@@ -99,7 +100,7 @@ export class ManageListingsPageComponent extends Component {
     const closingErrorListingId = !!closingListingError && closingListingError.listingId;
     const openingErrorListingId = !!openingListingError && openingListingError.listingId;
 
-    const title = intl.formatMessage({ id: 'ManageListingsPage.title' });
+    const title = intl.formatMessage({ id: 'ManageWishList.title' });
 
     const panelWidth = 62.5;
     // Render hints for responsive image
@@ -113,8 +114,8 @@ export class ManageListingsPageComponent extends Component {
       <Page title={title} scrollingDisabled={scrollingDisabled}>
         <LayoutSingleColumn>
           <LayoutWrapperTopbar>
-            <TopbarContainer currentPage="ManageListingsPage" />
-            <UserNav selectedPageName="ManageListingsPage" />
+            <TopbarContainer currentPage="ManageWishlistPage" />
+            <UserNav selectedPageName="ManageWishlistPage" />
           </LayoutWrapperTopbar>
           <LayoutWrapperMain>
             {queryInProgress ? loadingResults : null}
@@ -135,6 +136,7 @@ export class ManageListingsPageComponent extends Component {
                     hasOpeningError={openingErrorListingId.uuid === l.id.uuid}
                     hasClosingError={closingErrorListingId.uuid === l.id.uuid}
                     renderSizes={renderSizes}
+                    isWishlist={true}
                   />
                 ))}
               </div>
@@ -150,7 +152,7 @@ export class ManageListingsPageComponent extends Component {
   }
 }
 
-ManageListingsPageComponent.defaultProps = {
+ManageWishlistPageComponent.defaultProps = {
   listings: [],
   pagination: null,
   queryListingsError: null,
@@ -163,13 +165,12 @@ ManageListingsPageComponent.defaultProps = {
 
 const { arrayOf, bool, func, object, shape, string } = PropTypes;
 
-ManageListingsPageComponent.propTypes = {
+ManageWishlistPageComponent.propTypes = {
   closingListing: shape({ uuid: string.isRequired }),
   closingListingError: shape({
     listingId: propTypes.uuid.isRequired,
     error: propTypes.error.isRequired,
   }),
-  listings: arrayOf(propTypes.ownListing),
   onCloseListing: func.isRequired,
   onOpenListing: func.isRequired,
   openingListing: shape({ uuid: string.isRequired }),
@@ -198,9 +199,10 @@ const mapStateToProps = state => {
     openingListingError,
     closingListing,
     closingListingError,
-  } = state.ManageListingsPage;
-  console.log('Satate', state);
-  const listings = getOwnListingsById(state, currentPageResultIds);
+  } = state.ManageWishlistPage;
+
+  const listings = getListingsById(state, currentPageResultIds);
+  console.log('listings:::', listings);
   return {
     currentPageResultIds,
     listings,
@@ -221,12 +223,12 @@ const mapDispatchToProps = dispatch => ({
   onOpenListing: listingId => dispatch(openListing(listingId)),
 });
 
-const ManageListingsPage = compose(
+const ManageWishlistPage = compose(
   connect(
     mapStateToProps,
     mapDispatchToProps
   ),
   injectIntl
-)(ManageListingsPageComponent);
+)(ManageWishlistPageComponent);
 
-export default ManageListingsPage;
+export default ManageWishlistPage;

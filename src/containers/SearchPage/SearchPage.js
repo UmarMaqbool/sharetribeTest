@@ -268,11 +268,13 @@ const mapStateToProps = state => {
     searchMapListingIds,
     activeListingId,
   } = state.SearchPage;
+
   const pageListings = getListingsById(state, currentPageResultIds);
   const mapListings = getListingsById(
     state,
     unionWith(currentPageResultIds, searchMapListingIds, (id1, id2) => id1.uuid === id2.uuid)
   );
+  console.log('SearchPage: ', mapListings);
 
   return {
     listings: pageListings,

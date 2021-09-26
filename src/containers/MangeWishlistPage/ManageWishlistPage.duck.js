@@ -1,6 +1,11 @@
-import { updatedEntities, denormalisedEntities } from '../../util/data';
+import {
+  updatedEntities,
+  denormalisedEntities,
+  denormalisedResponseEntities,
+} from '../../util/data';
 import { storableError } from '../../util/errors';
-import { parse } from '../../util/urlHelpers';
+import { fetchCurrentUser, currentUserShowSuccess } from '../../ducks/user.duck';
+import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 
 // Pagination page size might need to be dynamic on responsive page layouts
 // Current design has max 3 columns 42 is divisible by 2 and 3
@@ -8,6 +13,9 @@ import { parse } from '../../util/urlHelpers';
 const RESULT_PAGE_SIZE = 42;
 
 // ================ Action types ================ //
+export const FETCH_WISHLIST_REQUEST = 'app/ManageWishlistPage/FETCH_WISHLIST_REQUEST';
+export const FETCH_WISHLIST_SUCCESS = 'app/ManageWishlistPage/FETCH_WISHLIST_SUCCESS';
+export const FETCH_WISHLIST_ERROR = 'app/ManageWishlistPage/FETCH_WISHLIST_ERROR';
 
 export const FETCH_LISTINGS_REQUEST = 'app/ManageListingsPage/FETCH_LISTINGS_REQUEST';
 export const FETCH_LISTINGS_SUCCESS = 'app/ManageListingsPage/FETCH_LISTINGS_SUCCESS';
@@ -20,8 +28,11 @@ export const OPEN_LISTING_ERROR = 'app/ManageListingsPage/OPEN_LISTING_ERROR';
 export const CLOSE_LISTING_REQUEST = 'app/ManageListingsPage/CLOSE_LISTING_REQUEST';
 export const CLOSE_LISTING_SUCCESS = 'app/ManageListingsPage/CLOSE_LISTING_SUCCESS';
 export const CLOSE_LISTING_ERROR = 'app/ManageListingsPage/CLOSE_LISTING_ERROR';
+export const RESET = 'app/ManageListingsPage/RESET';
 
-export const ADD_OWN_ENTITIES = 'app/ManageListingsPage/ADD_OWN_ENTITIES';
+export const ADD_Wishlist_REQUEST = 'app/ManageWishlistPage/ADD_Wishlist_REQUEST';
+export const ADD_Wishlist_SUCCESS = 'app/ManageWishlistPage/ADD_Wishlist_SUCCESS';
+export const ADD_Wishlist_ERROR = 'app/ManageWishlistPage/ADD_Wishlist_ERROR';
 
 // ================ Reducer ================ //
 
@@ -31,40 +42,16 @@ const initialState = {
   queryInProgress: false,
   queryListingsError: null,
   currentPageResultIds: [],
-  ownEntities: {},
   openingListing: null,
   openingListingError: null,
   closingListing: null,
   closingListingError: null,
 };
-
 const resultIds = data => data.data.map(l => l.id);
-
-const merge = (state, sdkResponse) => {
-  const apiResponse = sdkResponse.data;
-  return {
-    ...state,
-    ownEntities: updatedEntities({ ...state.ownEntities }, apiResponse),
-  };
-};
-
-const updateListingAttributes = (state, listingEntity) => {
-  const oldListing = state.ownEntities.ownListing[listingEntity.id.uuid];
-  const updatedListing = { ...oldListing, attributes: listingEntity.attributes };
-  const ownListingEntities = {
-    ...state.ownEntities.ownListing,
-    [listingEntity.id.uuid]: updatedListing,
-  };
-  return {
-    ...state,
-    ownEntities: { ...state.ownEntities, ownListing: ownListingEntities },
-  };
-};
-
-const manageListingsPageReducer = (state = initialState, action = {}) => {
+const manageWishlistPageReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
   switch (type) {
-    case FETCH_LISTINGS_REQUEST:
+    case FETCH_WISHLIST_REQUEST:
       return {
         ...state,
         queryParams: payload.queryParams,
@@ -72,14 +59,19 @@ const manageListingsPageReducer = (state = initialState, action = {}) => {
         queryListingsError: null,
         currentPageResultIds: [],
       };
-    case FETCH_LISTINGS_SUCCESS:
+    case FETCH_WISHLIST_SUCCESS:
       return {
         ...state,
         currentPageResultIds: resultIds(payload.data),
         pagination: payload.data.meta,
         queryInProgress: false,
       };
-    case FETCH_LISTINGS_ERROR:
+    case RESET:
+      return {
+        ...state,
+        queryInProgress: false,
+      };
+    case FETCH_WISHLIST_ERROR:
       // eslint-disable-next-line no-console
       console.error(payload);
       return { ...state, queryInProgress: false, queryListingsError: payload };
@@ -132,43 +124,18 @@ const manageListingsPageReducer = (state = initialState, action = {}) => {
       };
     }
 
-    case ADD_OWN_ENTITIES:
-      return merge(state, payload);
-
     default:
       return state;
   }
 };
 
-export default manageListingsPageReducer;
-
-// ================ Selectors ================ //
-
-/**
- * Get the denormalised own listing entities with the given IDs
- *
- * @param {Object} state the full Redux store
- * @param {Array<UUID>} listingIds listing IDs to select from the store
- */
-export const getOwnListingsById = (state, listingIds) => {
-  const { ownEntities } = state.ManageListingsPage;
-  const resources = listingIds.map(id => ({
-    id,
-    type: 'ownListing',
-  }));
-  const throwIfNotFound = false;
-  return denormalisedEntities(ownEntities, resources, throwIfNotFound);
-};
+export default manageWishlistPageReducer;
 
 // ================ Action creators ================ //
 
 // This works the same way as addMarketplaceEntities,
 // but we don't want to mix own listings with searched listings
 // (own listings data contains different info - e.g. exact location etc.)
-export const addOwnEntities = sdkResponse => ({
-  type: ADD_OWN_ENTITIES,
-  payload: sdkResponse,
-});
 
 export const openListingRequest = listingId => ({
   type: OPEN_LISTING_REQUEST,
@@ -202,39 +169,76 @@ export const closeListingError = e => ({
   payload: e,
 });
 
-export const queryListingsRequest = queryParams => ({
-  type: FETCH_LISTINGS_REQUEST,
+export const findWishListRequest = queryParams => ({
+  type: FETCH_WISHLIST_REQUEST,
   payload: { queryParams },
 });
 
-export const queryListingsSuccess = response => ({
-  type: FETCH_LISTINGS_SUCCESS,
+export const findWishListSuccess = response => ({
+  type: FETCH_WISHLIST_SUCCESS,
   payload: { data: response.data },
 });
+export const reset = response => ({
+  type: RESET,
+});
 
-export const queryListingsError = e => ({
-  type: FETCH_LISTINGS_ERROR,
+export const findWishListError = e => ({
+  type: FETCH_WISHLIST_ERROR,
   error: true,
   payload: e,
 });
 
 // Throwing error for new (loadData may need that info)
-export const queryOwnListings = queryParams => (dispatch, getState, sdk) => {
-  dispatch(queryListingsRequest(queryParams));
-  const { perPage, ...rest } = queryParams;
-  const params = { ...rest, per_page: perPage };
 
-  return sdk.ownListings
-    .query(params)
-    .then(response => {
-      dispatch(addOwnEntities(response));
-      dispatch(queryListingsSuccess(response));
-      return response;
-    })
-    .catch(e => {
-      dispatch(queryListingsError(storableError(e)));
-      throw e;
-    });
+// ================ Thunks ================ //
+
+/**
+ * Add Wishlist to the current user private data
+ */
+export const AddWishlistToCurrentuser = queryParams => (dispatch, getState, sdk) => {
+  const wishListID = queryParams.whislist_id;
+
+  return dispatch(fetchCurrentUser()).then(() => {
+    const currentUser = getState().user.currentUser;
+    let wishlists = {};
+    if (currentUser) {
+      let ids = currentUser.attributes.profile.privateData?.wishlists?.ids;
+      if (!ids) {
+        wishlists = {
+          ids: [wishListID],
+        };
+      } else {
+        wishlists = {
+          ids: [...ids, wishListID],
+        };
+      }
+
+      return sdk.currentUser
+        .updateProfile(
+          { privateData: { wishlists } },
+          {
+            expand: true,
+            include: ['profileImage'],
+            'fields.image': ['variants.square-small', 'variants.square-small2x'],
+          }
+        )
+        .then(response => {
+          const entities = denormalisedResponseEntities(response);
+          if (entities.length !== 1) {
+            throw new Error('Expected a resource in the sdk.currentUser.updateProfile response');
+          }
+
+          const user = entities[0];
+          dispatch(currentUserShowSuccess(user));
+        })
+        .catch(e => {
+          //dispatch(savePhoneNumberError(storableError(e)));
+          // pass the same error so that the SAVE_CONTACT_DETAILS_SUCCESS
+          // action will not be fired
+          throw e;
+        });
+    }
+  });
 };
 
 export const closeListing = listingId => (dispatch, getState, sdk) => {
@@ -265,14 +269,41 @@ export const openListing = listingId => (dispatch, getState, sdk) => {
     });
 };
 
-export const loadData = (params, search) => {
-  const queryParams = parse(search);
-  const page = queryParams.page || 1;
-  return queryOwnListings({
-    ...queryParams,
+const findWishlist = queryParams => (dispatch, getState, sdk) => {
+  dispatch(findWishListRequest(queryParams));
+  return dispatch(fetchCurrentUser()).then(() => {
+    const currentUser = getState().user.currentUser;
+    let params = {};
+    if (currentUser) {
+      let ids = currentUser.attributes.profile.privateData?.wishlists?.ids;
+      if (ids) {
+        params = { ids: [...ids], ...queryParams };
+        return sdk.listings
+          .query(params)
+          .then(response => {
+            dispatch(addMarketplaceEntities(response));
+            dispatch(findWishListSuccess(response));
+            return response;
+          })
+          .catch(e => {
+            dispatch(findWishListError(storableError(e)));
+            throw e;
+          });
+      } else {
+        dispatch(reset());
+      }
+    }
+  });
+};
+
+export const loadData = () => {
+  let page = 1;
+  return findWishlist({
     page,
     perPage: RESULT_PAGE_SIZE,
-    include: ['images'],
+    include: ['author', 'images'],
+    'fields.listing': ['title', 'geolocation', 'price'],
+    'fields.user': ['profile.displayName', 'profile.abbreviatedName'],
     'fields.image': ['variants.landscape-crop', 'variants.landscape-crop2x'],
     'limit.images': 1,
   });

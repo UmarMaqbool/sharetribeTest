@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { string, func } from 'prop-types';
+import { withRouter } from 'react-router-dom';
+import { compose } from 'redux';
 import { FormattedMessage, intlShape, injectIntl } from '../../util/reactIntl';
 import classNames from 'classnames';
 import { lazyLoadWithDimensions } from '../../util/contextHelpers';
@@ -12,6 +14,7 @@ import config from '../../config';
 import { NamedLink, ResponsiveImage } from '../../components';
 
 import css from './ListingCard.module.css';
+import Button from '../Button/Button';
 
 const MIN_LENGTH_FOR_LONG_WORDS = 10;
 
@@ -42,7 +45,18 @@ class ListingImage extends Component {
 const LazyImage = lazyLoadWithDimensions(ListingImage, { loadAfterInitialRendering: 3000 });
 
 export const ListingCardComponent = props => {
-  const { className, rootClassName, intl, listing, renderSizes, setActiveListing } = props;
+  const {
+    className,
+    rootClassName,
+    intl,
+    listing,
+    renderSizes,
+    setActiveListing,
+    history,
+    user,
+    onSelectAddToWishlist,
+  } = props;
+  console.log('Location: ', user);
   const classes = classNames(rootClassName || css.root, className);
   const currentListing = ensureListing(listing);
   const id = currentListing.id.uuid;
@@ -66,22 +80,24 @@ export const ListingCardComponent = props => {
     : 'ListingCard.perUnit';
 
   return (
-    <NamedLink className={classes} name="ListingPage" params={{ id, slug }}>
-      <div
-        className={css.threeToTwoWrapper}
-        onMouseEnter={() => setActiveListing(currentListing.id)}
-        onMouseLeave={() => setActiveListing(null)}
-      >
-        <div className={css.aspectWrapper}>
-          <LazyImage
-            rootClassName={css.rootForImage}
-            alt={title}
-            image={firstImage}
-            variants={['landscape-crop', 'landscape-crop2x']}
-            sizes={renderSizes}
-          />
+    <div className={classes}>
+      <NamedLink name="ListingPage" params={{ id, slug }}>
+        <div
+          className={css.threeToTwoWrapper}
+          onMouseEnter={() => setActiveListing(currentListing.id)}
+          onMouseLeave={() => setActiveListing(null)}
+        >
+          <div className={css.aspectWrapper}>
+            <LazyImage
+              rootClassName={css.rootForImage}
+              alt={title}
+              image={firstImage}
+              variants={['landscape-crop', 'landscape-crop2x']}
+              sizes={renderSizes}
+            />
+          </div>
         </div>
-      </div>
+      </NamedLink>
       <div className={css.info}>
         <div className={css.price}>
           <div className={css.priceValue} title={priceTitle}>
@@ -102,8 +118,27 @@ export const ListingCardComponent = props => {
             <FormattedMessage id="ListingCard.hostedBy" values={{ authorName }} />
           </div>
         </div>
+        <div className={css.actionsInfo}>
+          <Button
+            disabled={
+              user?.attributes?.profile?.privateData?.wishlists?.ids
+                ? user?.attributes?.profile?.privateData?.wishlists?.ids.find(x => x == id)
+                : false
+            }
+            onClick={() => {
+              if (!user) {
+                history.replace('signup');
+                return;
+              }
+              onSelectAddToWishlist({ whislist_id: id });
+            }}
+            className={css.heroButton}
+          >
+            <FormattedMessage id="SectionWhislist.AddButton" />
+          </Button>
+        </div>
       </div>
-    </NamedLink>
+    </div>
   );
 };
 
@@ -126,4 +161,7 @@ ListingCardComponent.propTypes = {
   setActiveListing: func,
 };
 
-export default injectIntl(ListingCardComponent);
+export default compose(
+  withRouter,
+  injectIntl
+)(ListingCardComponent);
