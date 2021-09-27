@@ -150,6 +150,22 @@ export const filters = [
       ],
     },
   },
+  {
+    id: 'reviewAvg',
+    label: 'Review rating',
+    type: 'SelectSingleFilter',
+    group: 'secondary',
+    queryParamNames: ['meta_reviewAvg'],
+    config: {
+      options: [
+        { key: '1', label: '1 Star' },
+        { key: '2', label: '2 Star' },
+        { key: '3', label: '3 Star' },
+        { key: '4', label: '4 Star' },
+        { key: '5', label: '5 Star' },
+      ],
+    },
+  },
 ];
 
 export const sortConfig = {

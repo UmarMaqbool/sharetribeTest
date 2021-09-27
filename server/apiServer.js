@@ -3,7 +3,7 @@
 
 // Configure process.env with .env.* files
 require('./env').configureEnv();
-
+const eventHandler = require('./reviewEventHandler');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
