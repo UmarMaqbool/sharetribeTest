@@ -210,7 +210,7 @@ const PanelHeading = props => {
       ) : (
         <HeadingProvider
           className={titleClasses}
-          id="TransactionPanel.saleAcceptedTitle"
+          id="TransactionPanel.saleAcceptedTitleBooked"
           values={{ customerName, listingLink }}
         />
       );
