@@ -1038,7 +1038,7 @@
   "TransactionPanel.initialMessageFailed": "Whoops, failed to send message from checkout.",
   "TransactionPanel.messageDeletedListing": "However, the listing is deleted and cannot be viewed anymore.",
   "TransactionPanel.messageLoadingFailed": "Something went wrong when loading messages. Please refresh the page and try again.",
-  "TransactionPanel.orderAcceptedSubtitle": "Your booking for {listingLink} has been accepted.",
+  "TransactionPanel.orderAcceptedSubtitle": "Your booking for {listingLink} has been confirmed.",
   "TransactionPanel.orderAcceptedTitle": "Woohoo {customerName}!",
   "TransactionPanel.orderCancelledTitle": "{customerName}, your booking for {listingLink} has been cancelled.",
   "TransactionPanel.orderDeclinedTitle": "{customerName}, your booking for {listingLink} has been declined.",

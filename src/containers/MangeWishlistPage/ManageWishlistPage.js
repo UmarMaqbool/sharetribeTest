@@ -54,7 +54,6 @@ export class ManageWishlistPageComponent extends Component {
 
     const hasPaginationInfo = !!pagination && pagination.totalItems != null;
     const listingsAreLoaded = !queryInProgress && hasPaginationInfo;
-    console.log('listingsAreLoaded', !!pagination);
     const loadingResults = (
       <h2>
         <FormattedMessage id="ManageWishList.loading" />

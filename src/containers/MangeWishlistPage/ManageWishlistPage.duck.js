@@ -341,7 +341,7 @@ const findWishlist = queryParams => (dispatch, getState, sdk) => {
     let params = {};
     if (currentUser) {
       let ids = currentUser.attributes.profile.privateData?.wishlists?.ids;
-      if (ids.length) {
+      if (ids?.length) {
         params = { ids: [...ids], ...queryParams };
         return sdk.listings
           .query(params)
