@@ -25,7 +25,7 @@ const pollWait = 1000; // 1s
 const stateFile = './last-sequence-id.state';
 
 const queryEvents = args => {
-  var filter = { eventTypes: 'review/created,review/updated' };
+  var filter = { eventTypes: 'review/created' };
   return integrationSdk.events.query({ ...args, ...filter });
 };
 
@@ -54,46 +54,46 @@ const handleEvent = event => {
   // detect change and handle event
   // ...
 
-  console.log(JSON.stringify(event));
-  // let rating = event.attributes.rating;
-  // let listingId = event.attributes.resource?.relationships?.listing?.data.id.uuid
-  // let count, avg, calculatedAvg;
-  // let newRatting = Math.floor(Math.random() * 5) + 1;
-  // integrationSdk.listings
-  //   .open(
-  //     {
-  //       id: '614efaee-30e1-4a7c-96c0-23299940af97',
-  //     },
-  //     {
-  //       expand: true,
-  //     }
-  //   )
-  //   .then(res => {
-  //     let metaData = res.data.data.attributes.metadata;
-  //     if (metaData) {
-  //       count = metaData.reviewCount ? metaData.reviewCount : 1;
-  //       avg = metaData.reviewAvg ? metaData.reviewAvg : 0;
-  //       let sum = newRatting + avg * count;
-  //       count = count + 1;
-  //       calculatedAvg = Math.round(sum / count);
-  //       integrationSdk.listings
-  //         .update(
-  //           {
-  //             id: '614efaee-30e1-4a7c-96c0-23299940af97',
-  //             metadata: { reviewCount: count, reviewAvg: calculatedAvg },
-  //           },
-  //           {
-  //             expand: true,
-  //           }
-  //         )
-  //         .then(res => {
-  //           console.log('Res:', res);
-  //         })
-  //         .catch(err => {
-  //           console.log('err: ', err);
-  //         });
-  //     }
-  //   });
+  let { type, rating } = event.attributes?.resource?.attributes;
+  if (type == 'ofProvider') {
+    let listingId = event.attributes.resource?.relationships?.listing?.data?.id?.uuid;
+    integrationSdk.listings
+      .open(
+        {
+          id: listingId,
+        },
+        {
+          expand: true,
+        }
+      )
+      .then(res => {
+        let metaData = res.data.data.attributes.metadata;
+        if (metaData) {
+          count = metaData.reviewCount ? metaData.reviewCount : 0;
+          avg = metaData.reviewAvg ? metaData.reviewAvg : 0;
+          let sum = rating + avg * count;
+          count = count + 1;
+          calculatedAvg = Math.round(sum / count);
+          integrationSdk.listings
+            .update(
+              {
+                id: listingId,
+                metadata: { reviewCount: count, reviewAvg: calculatedAvg },
+              },
+              {
+                expand: true,
+              }
+            )
+            .then(res => {
+              console.log('Res:', res);
+            })
+            .catch(err => {
+              console.log('err: ', err);
+            });
+        }
+      });
+  }
+
   // Then store the event's sequence ID
   saveLastEventSequenceId(event.attributes.sequenceId);
 };
@@ -102,61 +102,10 @@ const pollLoop = sequenceId => {
   var params = sequenceId ? { startAfterSequenceId: sequenceId } : { createdAtStart: startTime };
   queryEvents(params).then(res => {
     const events = res.data.data;
-    console.log('hello');
     const fullPage = events.length === res.data.meta.perPage;
     const delay = fullPage ? pollWait : pollIdleWait;
     const lastEvent = events[events.length - 1];
     const lastSequenceId = lastEvent ? lastEvent.attributes.sequenceId : sequenceId;
-
-    // integrationSdk.listings
-    //   .query({
-    //     meta_reviewAvg: 2,
-    //   })
-    //   .then(res => {
-    //     console.log('Res:', JSON.stringify(res.data.data));
-    //   })
-    //   .catch(err => {
-    //     console.log('err: ', err);
-    //   });
-    // let review = Math.floor(Math.random() * 5) + 1;
-    // count =  count + 1;
-    // let count, avg, calculatedAvg;
-    // let newRatting = Math.floor(Math.random() * 5) + 1;
-    // integrationSdk.listings
-    //   .open(
-    //     {
-    //       id: '614efaee-30e1-4a7c-96c0-23299940af97',
-    //     },
-    //     {
-    //       expand: true,
-    //     }
-    //   )
-    //   .then(res => {
-    //     let metaData = res.data.data.attributes.metadata;
-    //     if (metaData) {
-    //       count = metaData.reviewCount ? metaData.reviewCount : 1;
-    //       avg = metaData.reviewAvg ? metaData.reviewAvg : 0;
-    //       let sum = newRatting + avg * count;
-    //       count = count + 1;
-    //       calculatedAvg = Math.round(sum / count);
-    //       integrationSdk.listings
-    //         .update(
-    //           {
-    //             id: '614efaee-30e1-4a7c-96c0-23299940af97',
-    //             metadata: { reviewCount: count, reviewAvg: calculatedAvg },
-    //           },
-    //           {
-    //             expand: true,
-    //           }
-    //         )
-    //         .then(res => {
-    //           console.log('Res:', res);
-    //         })
-    //         .catch(err => {
-    //           console.log('err: ', err);
-    //         });
-    //     }
-    //   });
 
     events.forEach(e => {
       handleEvent(e);
