@@ -38,6 +38,7 @@ import {
 import MenuIcon from './MenuIcon';
 import Overlay from './Overlay';
 import css from './ManageListingCard.module.css';
+import Button from '../Button/Button';
 
 // Menu content needs the same padding
 const MENU_CONTENT_OFFSET = -12;
@@ -125,6 +126,7 @@ export const ManageListingCardComponent = props => {
     renderSizes,
     availabilityEnabled,
     isWishlist,
+    onSelectRemoveFromWishlist,
   } = props;
   const classes = classNames(rootClassName || css.root, className);
   const currentListing = ensureOwnListing(listing);
@@ -337,6 +339,18 @@ export const ManageListingCardComponent = props => {
               {formatTitle(title, MAX_LENGTH_FOR_WORDS_IN_TITLE)}
             </InlineTextButton>
           </div>
+          {isWishlist && (
+            <div className={css.actionsInfo}>
+              <Button
+                onClick={() => {
+                  onSelectRemoveFromWishlist({ whislist_id: id });
+                }}
+                className={css.heroButton}
+              >
+                <FormattedMessage id="SectionWhislist.remove" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {!isWishlist && (
@@ -382,6 +396,7 @@ const { bool, func, shape, string } = PropTypes;
 ManageListingCardComponent.propTypes = {
   className: string,
   rootClassName: string,
+  isWishlist: bool,
   hasClosingError: bool.isRequired,
   hasOpeningError: bool.isRequired,
   intl: intlShape.isRequired,

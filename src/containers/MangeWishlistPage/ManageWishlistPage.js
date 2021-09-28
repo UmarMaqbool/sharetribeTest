@@ -19,7 +19,7 @@ import {
 } from '../../components';
 import { TopbarContainer } from '..';
 
-import { closeListing, openListing } from './ManageWishlistPage.duck';
+import { closeListing, openListing, removeWishlistFromUser } from './ManageWishlistPage.duck';
 import css from './ManageWishlistPage.module.css';
 
 export class ManageWishlistPageComponent extends Component {
@@ -49,11 +49,12 @@ export class ManageWishlistPageComponent extends Component {
       queryParams,
       scrollingDisabled,
       intl,
+      onSubmitRemoveWishlist,
     } = this.props;
 
     const hasPaginationInfo = !!pagination && pagination.totalItems != null;
     const listingsAreLoaded = !queryInProgress && hasPaginationInfo;
-
+    console.log('listingsAreLoaded', !!pagination);
     const loadingResults = (
       <h2>
         <FormattedMessage id="ManageWishList.loading" />
@@ -137,6 +138,9 @@ export class ManageWishlistPageComponent extends Component {
                     hasClosingError={closingErrorListingId.uuid === l.id.uuid}
                     renderSizes={renderSizes}
                     isWishlist={true}
+                    onSelectRemoveFromWishlist={values => {
+                      onSubmitRemoveWishlist(values);
+                    }}
                   />
                 ))}
               </div>
@@ -200,9 +204,7 @@ const mapStateToProps = state => {
     closingListing,
     closingListingError,
   } = state.ManageWishlistPage;
-
   const listings = getListingsById(state, currentPageResultIds);
-  console.log('listings:::', listings);
   return {
     currentPageResultIds,
     listings,
@@ -221,6 +223,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => ({
   onCloseListing: listingId => dispatch(closeListing(listingId)),
   onOpenListing: listingId => dispatch(openListing(listingId)),
+  onSubmitRemoveWishlist: listingId => dispatch(removeWishlistFromUser(listingId)),
 });
 
 const ManageWishlistPage = compose(

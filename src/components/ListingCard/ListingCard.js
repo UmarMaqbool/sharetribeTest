@@ -56,7 +56,6 @@ export const ListingCardComponent = props => {
     user,
     onSelectAddToWishlist,
   } = props;
-  console.log('Location: ', user);
   const classes = classNames(rootClassName || css.root, className);
   const currentListing = ensureListing(listing);
   const id = currentListing.id.uuid;
@@ -127,7 +126,7 @@ export const ListingCardComponent = props => {
             }
             onClick={() => {
               if (!user) {
-                history.replace('signup');
+                history.replace('login');
                 return;
               }
               onSelectAddToWishlist({ whislist_id: id });

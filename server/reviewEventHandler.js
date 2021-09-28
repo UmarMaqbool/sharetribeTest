@@ -16,7 +16,7 @@ const integrationSdk = flexIntegrationSdk.createInstance({
 const startTime = new Date();
 
 // Polling interval (in ms) when all events have been fetched.
-const pollIdleWait = 10000; // 5 minutes
+const pollIdleWait = 30000; // 30 seconds
 // Polling interval (in ms) when a full page of events is received and there may be more
 const pollWait = 1000; // 1s
 
@@ -43,7 +43,6 @@ const loadLastEventSequenceId = () => {
   try {
     const data = fs.readFileSync(stateFile);
     let id = parseInt(data, 10);
-    console.log(id);
     return id;
   } catch (err) {
     return null;

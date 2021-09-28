@@ -199,7 +199,6 @@ const mapStateToProps = state => {
     closingListing,
     closingListingError,
   } = state.ManageListingsPage;
-  console.log('Satate', state);
   const listings = getOwnListingsById(state, currentPageResultIds);
   return {
     currentPageResultIds,

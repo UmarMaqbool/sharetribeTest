@@ -52,7 +52,6 @@ const SearchResultsPanel = props => {
             renderSizes={cardRenderSizes}
             setActiveListing={setActiveListing}
             onSelectAddToWishlist={values => {
-              console.log('here2: ', values);
               onSubmitAddWishlist(values);
             }}
             user={currentUser}

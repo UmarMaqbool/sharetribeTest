@@ -33,7 +33,7 @@ export const RESET = 'app/ManageListingsPage/RESET';
 export const ADD_Wishlist_REQUEST = 'app/ManageWishlistPage/ADD_Wishlist_REQUEST';
 export const ADD_Wishlist_SUCCESS = 'app/ManageWishlistPage/ADD_Wishlist_SUCCESS';
 export const ADD_Wishlist_ERROR = 'app/ManageWishlistPage/ADD_Wishlist_ERROR';
-
+export const REMOVE_WISHLIST_ITEM = 'app/ManageWishlistPage/REMOVE_WISHLIST_ITEM';
 // ================ Reducer ================ //
 
 const initialState = {
@@ -60,16 +60,33 @@ const manageWishlistPageReducer = (state = initialState, action = {}) => {
         currentPageResultIds: [],
       };
     case FETCH_WISHLIST_SUCCESS:
+      console.log('payload.data.meta:', payload.data.meta);
       return {
         ...state,
         currentPageResultIds: resultIds(payload.data),
         pagination: payload.data.meta,
         queryInProgress: false,
       };
+    case REMOVE_WISHLIST_ITEM:
+      return {
+        ...state,
+        pagination: {
+          ...state.pagination,
+          totalItems: payload.length,
+        },
+        currentPageResultIds: [
+          ...payload.map(id => ({
+            uuid: id,
+          })),
+        ],
+      };
     case RESET:
       return {
         ...state,
         queryInProgress: false,
+        pagination: {
+          totalItems: 0,
+        },
       };
     case FETCH_WISHLIST_ERROR:
       // eslint-disable-next-line no-console
@@ -178,13 +195,17 @@ export const findWishListSuccess = response => ({
   type: FETCH_WISHLIST_SUCCESS,
   payload: { data: response.data },
 });
-export const reset = response => ({
+export const nodata = response => ({
   type: RESET,
 });
 
 export const findWishListError = e => ({
   type: FETCH_WISHLIST_ERROR,
   error: true,
+  payload: e,
+});
+export const removeWishList = e => ({
+  type: REMOVE_WISHLIST_ITEM,
   payload: e,
 });
 
@@ -213,6 +234,50 @@ export const AddWishlistToCurrentuser = queryParams => (dispatch, getState, sdk)
         };
       }
 
+      return sdk.currentUser
+        .updateProfile(
+          { privateData: { wishlists } },
+          {
+            expand: true,
+            include: ['profileImage'],
+            'fields.image': ['variants.square-small', 'variants.square-small2x'],
+          }
+        )
+        .then(response => {
+          const entities = denormalisedResponseEntities(response);
+          if (entities.length !== 1) {
+            throw new Error('Expected a resource in the sdk.currentUser.updateProfile response');
+          }
+
+          const user = entities[0];
+          dispatch(currentUserShowSuccess(user));
+        })
+        .catch(e => {
+          //dispatch(savePhoneNumberError(storableError(e)));
+          // pass the same error so that the SAVE_CONTACT_DETAILS_SUCCESS
+          // action will not be fired
+          throw e;
+        });
+    }
+  });
+};
+
+/**
+ * Add Wishlist to the current user private data
+ */
+export const removeWishlistFromUser = queryParams => (dispatch, getState, sdk) => {
+  const wishListID = queryParams.whislist_id;
+
+  return dispatch(fetchCurrentUser()).then(() => {
+    const currentUser = getState().user.currentUser;
+    let wishlists = {};
+    if (currentUser) {
+      let ids = currentUser.attributes.profile.privateData?.wishlists?.ids;
+      let filterdIds = ids.filter(id => id != wishListID);
+      wishlists = {
+        ids: filterdIds,
+      };
+      dispatch(removeWishList(filterdIds));
       return sdk.currentUser
         .updateProfile(
           { privateData: { wishlists } },
@@ -276,7 +341,7 @@ const findWishlist = queryParams => (dispatch, getState, sdk) => {
     let params = {};
     if (currentUser) {
       let ids = currentUser.attributes.profile.privateData?.wishlists?.ids;
-      if (ids) {
+      if (ids.length) {
         params = { ids: [...ids], ...queryParams };
         return sdk.listings
           .query(params)
@@ -290,7 +355,7 @@ const findWishlist = queryParams => (dispatch, getState, sdk) => {
             throw e;
           });
       } else {
-        dispatch(reset());
+        dispatch(nodata());
       }
     }
   });
